@@ -7,7 +7,7 @@ logs
 *.log
 *.bak
 npm-debug.log*
-
+log.txt
 # Runtime data
 pids
 *.pid
@@ -31,7 +31,9 @@ build/Release
 # Dependency directory
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
 node_modules
-
+_pdfjs
+pdfjs/*
+generic
 # Optional npm cache directory
 .npm
 

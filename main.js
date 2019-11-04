@@ -2,13 +2,15 @@
 const qs = require ("querystring");
 const electron = require('electron');
 const path = require('path');
+//console.log(path.resolve(require('electron')));
+console.log(require.resolve('electron'));
 const fs = require('fs');
 const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 //const pdfURLHOME = "http://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
 //const pdfURLHOME = "file://C:/Users/sig/github/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
 const pdfURLHOME = "Dropbox/org/gtd/mygtd.pdf";
-const host='http://127.0.0.1:8080/Dropbox';
+const host='http://127.0.0.1:8080/Dropbox/';
 const host2='http://127.0.0.1:6968/';
 var webContents = {};
 var browserWindows = {};
@@ -31,8 +33,8 @@ app.on('ready', function() {
   const param = qs.stringify({file: pdfURLHOME});
   //mainWindow.loadURL('file://' + __dirname + '/../pdf.js/web/viewer.html?' + param);
   //file://C:\Users\sig\github\electron-pdfjs/../pdf.js/web/viewer.html
-  mainWindow.loadURL(host+'/pdf.js/web/viewer.html?' + param);
-  console.log(host+'/pdf.js/web/viewer.html?' + param);
+  mainWindow.loadURL(host+'pdf.js/build/generic/web/viewer.html?' + param);
+  console.log(host+'pdf.js/build/generic/web/viewer.html?' + param);
   //mainWindow.webContents.openDevTools();
   webContents[pdfURLHOME]=mainWindow.webContents;
 //  browserWindows[pdfURLHOME]=mainWindow;  //don't hide the main window
@@ -65,7 +67,7 @@ app.on('ready', function() {
 var http = require('http');
 var url = require("url");
 
-function copybmk(res,ourl) {
+function copybmk(res,ourl,req) {
   console.log("This is the copybmk page.");
   Object.keys(webContents).map(function(v) { 
     console.log(v); 
@@ -75,22 +77,22 @@ function copybmk(res,ourl) {
   res.end("This is copybmk page.");
 }
  
-function gotobmk(res,ourl) {
+function gotobmk(res,ourl,req) {
   console.log("This is the gotobmk page.");
   var thefile=ourl.query['file'];
   console.log('thefile: '+thefile);
   if(!(thefile in webContents)){
     var mainWindow = new BrowserWindow({
-        width: 800,
-        height: 1000,
+        width: 1400,
+        height: 2200,
         webPreferences: {
           nodeIntegration: false,
           webSecurity: false,
           preload: path.join(__dirname, 'preload.js')
         },
     });
-    //console.log(host+'/pdf.js/web/viewer.html'+ourl.search);//?' + param);
-    mainWindow.loadURL(decodeURI(host+'/pdf.js/web/viewer.html'+ourl.search));
+    console.log(host+'/pdf.js/build/generic/web/viewer.html'+'=='+ourl.search+'=='+ourl.hash);//?' + param);
+    mainWindow.loadURL(decodeURI(host+'pdf.js/build/generic/web/viewer.html'+ourl.search));
     webContents[thefile]=mainWindow.webContents;
     browserWindows[thefile]=mainWindow;
     mainWindow.on('closed', function() {
@@ -98,17 +100,26 @@ function gotobmk(res,ourl) {
         delete browserWindows[thefile];
     });
     mainWindow.webContents.on('did-finish-load', function() {
-        mainWindow.webContents.send("incoming",thefile);//http://stackoverflow.com/questions/30681639/how-to-access-browserwindow-javascript-global-from-main-process-in-electron
-    });
+        if(typeof ourl.query['page'] !== 'undefined'){
+            console.log("typeof ourl.query['page'] !== 'undefined'");
+            mainWindow.webContents.send("incoming",thefile,'page='+ourl.query['page']+'&zoom='+ourl.query['zoom']);//
+        }else if(ourl.query['nameddest']!=''){
+            console.log("ourl.query['nameddest'] : "+ourl.query['nameddest']);
+            mainWindow.webContents.send("incoming",thefile,ourl.query['nameddest']);//            
+        }
+//        mainWindow.webContents.send("incoming2",'page='+ourl.query['page']+'&zoom='+ourl.query['zoom']);
+//        mainWindow.webContents.send('pagechange');
+    });//.finally(function() {webContents[thefile].send("incoming2",'page='+ourl.query['page']+'&zoom='+ourl.query['zoom']);});
   }else{
-    webContents[thefile].send("incoming2",'page='+ourl.query['page']+'&zoom='+ourl.query['zoom']);
+        if(typeof ourl.query['page'] !== 'undefined'){
+            console.log("typeof ourl.query['page'] !== 'undefined'");
+            webContents[thefile].send("incoming2",'page='+ourl.query['page']+'&zoom='+ourl.query['zoom']);
+        }else if(ourl.query['explicitDest']　!== 'undefined'){
+            webContents[thefile].send("incoming2",ourl.query['explicitDest']);
+        }else if(ourl.query['nameddest']　!== 'undefined'){
+            webContents[thefile].send("incoming2",ourl.query['nameddest']);
+        }
   }
-  for (var mthefile in browserWindows){
-    browserWindows[mthefile].setAlwaysOnTop(false);
-    browserWindows[mthefile].hide();
-  };
-  browserWindows[thefile].setAlwaysOnTop(true);
-  browserWindows[thefile].show();
   Object.keys(ourl.query).map(function(v) { console.log(v+':'+ourl.query[v]); });
   Object.keys(webContents).map(function(v) { console.log(v); });
 //  webContents.send("incoming",res);
@@ -116,12 +127,12 @@ function gotobmk(res,ourl) {
   res.end("This is gotobmk page.");
 }
 
-function route(pathname, res, ourl) {
+function route(pathname, res, ourl, req) {
   var handle = {};
   handle["/copybmk"] = copybmk;
   handle["/gotobmk"] = gotobmk;
   if (typeof handle[pathname] === 'function') {
-    return handle[pathname](res,ourl);
+    return handle[pathname](res,ourl, req);
   } else {
     console.log("404 Not Found " + pathname);
     res.writeHead(200, {"Content-Type": "text/plain"});
@@ -131,5 +142,5 @@ function route(pathname, res, ourl) {
 
 http.createServer(function (req, res) {
     var ourl = url.parse(req.url,true);
-    route(ourl.pathname,res,ourl);
+    route(ourl.pathname,res,ourl,req);
 }).listen(6968, '127.0.0.1');

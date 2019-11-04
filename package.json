@@ -10,10 +10,9 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron-prebuilt": "^0.36.4"
+    "electron": "^1.4.12"
   },
   "dependencies": {
-    "tcp-socket": "^0.5.8",
-    "electron": "^0.4.1"
+    "electron": "^1.4.12"
   }
 }
