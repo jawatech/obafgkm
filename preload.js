@@ -1,5 +1,8 @@
 ﻿//var ipc = ipcRenderer;//require("electron").ipcRenderer;
 var ipc = require("electron").ipcRenderer;
+// import { repo } from "./my-mind/src/command/command.ts";
+// var repo=require('./my-mind/my-mind.js').repo;
+// var repo=require('./my-mind/src/command/command.ts').repo;
 //var PDFViewerApplication = require('pdf.js');
 //
 
@@ -14,7 +17,7 @@ function setData(thefile, thehash){
       alert('setTimeout');
       setTimeout(function () {
           wait(condition, callback);
-      }, 1000);
+      }, 100000);
   }
   // console.log("thefile: "+thefile);
   setTimeout(function () {wait(
@@ -48,9 +51,37 @@ function setHash(thehash){
 //  ipc.send("retrieve2", PDFViewerApplication);//document);
 }
 
+function visit(node,parent){
+  parent["text"]=node[1]["raw-value"];
+  if(node.length>2){
+    parent["children"]=[];
+    for (let index = 2; index < node.length; index++) {
+      var child={};
+      parent["children"].push(child);
+      const element = node[index];
+      visit(element,child);
+    }
+  }
+}
+
+function drawmap(body){
+  var themap=JSON.parse(body)
+  // console.log(themap[2])
+  var root={"root":{"layout": "graph-right"}}
+  // storages[3].loadDone(JSON.parse('{ "root": { "text": "My Mind Map2", "layout": "graph-right"  } }'));
+  visit(themap[2],root["root"])
+  console.log(root)
+  storages[3].loadDone(root);
+}
+
 ipc.on("incoming2", function(event,thehash){
   // console.log("incoming2: "+thehash);
   setHash(thehash);
+});
+
+ipc.on("drawmap", function(event,body){
+  // console.log("incoming2: "+thehash);
+  drawmap(body);
 });
 
 ipc.on("incoming", function(event, thefile, thehash){
@@ -95,15 +126,30 @@ function testpreload(){
     alert('testpreload')
 }
 function getPdfva(){
-  pdfva=null;
+  var pdfva=null;
   if(typeof PDFViewerApplication== "undefined"){
-    pdfva=frames[0].window.PDFViewerApplication;}
+    console.log('frames:'+frames);
+    if(typeof frames[0]== "undefined"){
+      pdfva=frames.window.PDFViewerApplication;
+      console.log('frames:'+frames);
+      console.log('frames.window:'+frames.window);
+      console.log('frames.window.PDFViewerApplication:'+frames.window.PDFViewerApplication);
+      console.log('window:'+window);
+      console.log('window.PDFViewerApplication:'+window.PDFViewerApplication);
+      console.log('frames.PDFViewerApplication:'+frames.PDFViewerApplication);
+    }
+    else{
+      console.log('frames[0]:'+frames[0]);
+      console.log('frames[0].window:'+frames[0].window);
+      pdfva=frames[0].window.PDFViewerApplication;
+    }
+  }
   else{pdfva=PDFViewerApplication;}
   return pdfva;
 }
 function getWindow(){
   if(typeof frames[0]== "undefined"){
-    return window;
+    return frames;
   }
   else return frames[0].window;
 }

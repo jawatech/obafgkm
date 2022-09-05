@@ -1,20 +1,26 @@
 'use strict';
-const qs = require ("querystring");
 const electron = require('electron');
-const path = require('path');
-//console.log(path.resolve(require('electron')));
+const qs = require ("querystring");
+const fspath = require('path');
+//console.log(fspath.resolve(require('electron')));
 // console.log(require.resolve('electron'));
 const fs = require('fs');
+const prompt = require('electron-prompt');//https://www.npmjs.com/package/electron-prompt
+// where you import your packages
+const mpvAPI = require('node-mpv');
+// where you want to initialise the API
+var mpv = new mpvAPI();
 //const app = electron.app;
 const BrowserWindow = electron.BrowserWindow;
 //const pdfURLHOME = "http://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
 //const pdfURLHOME = "file://C:/Users/sig/github/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
 const pdfURLHOME = "Dropbox/org/gtd/mygtd.pdf";//\Dropbox\misc\Harrison’s Principles of Internal Medicine, 20th Edition.pdf
 //const pdfURLHOME = "Dropbox/misc/Harrison’s Principles of Internal Medicine, 20th Edition.pdf";//\Dropbox\misc\Harrison’s Principles of Internal Medicine, 20th Edition.pdf
-const host='http://127.0.0.1:8889/Dropbox/';
-const host2='http://127.0.0.1:6968/';
+const host='http://127.0.0.1:8880/Dropbox/';
+// const host2='http://127.0.0.1:6968/';
 //const viewerurl='pdf.js/build/generic/web/viewer.html';
 const viewerurl='jawatech/pdfjs2021/build/generic/web/viewer.html';
+const viewerurl1='electron-pdfjs3/my-mind/index.html';
 var webContents = {};
 var browserWindows = {};
 var mainWindow0 = null;
@@ -27,12 +33,13 @@ app.on('ready', function() {
     width: 800,
     height: 600,
     webPreferences: {
+      contextIsolation: false,
       nodeIntegration: false,
       webSecurity: true,
 	// Load `electron-notification-shim` in rendering view, by requiring it in your preloaded script. 
       //the path of preload script has to be "absolute path".
       //https://github.com/atom/electron/blob/v0.34.3/docs/api/browser-window.md#new-browserwindowoptions
-      preload: path.join(__dirname, 'preload.js')
+      preload: fspath.join(__dirname, 'preload.js')
     },
   });
   
@@ -52,14 +59,14 @@ app.on('ready', function() {
   //http://qiita.com/indometacin/items/018f78757c54a4c2eb5b
   ipcMain.on('retrieve', function(event, arg) {
           // console.log();  // prints "ping"
-          // console.log(path.join(__dirname, 'preload.js'));
+          // console.log(fspath.join(__dirname, 'preload.js'));
           event.sender.send('asynchronous-reply', 'pong');
         });
   ipcMain.on('retrieve2', function(event, arg) {
           // console.log(arg.pdfViewer._location);          console.log(arg.pdfViewer.linkService);          console.log(arg.url);  // prints "ping"          console.log(arg.pdfDocument.pdfInfo.fingerprint);  // prints "ping"
           event.sender.send('asynchronous-reply', 'pong');
         });
-  mainWindow0.webContents.send("incoming",'page=2');//http://stackoverflow.com/questions/30681639/how-to-access-browserwindow-javascript-global-from-main-process-in-electron
+//20220224  // mainWindow0.webContents.send("incoming",'page=2');//http://stackoverflow.com/questions/30681639/how-to-access-browserwindow-javascript-global-from-main-process-in-electron
 //  webContents.executeJavaScript("getData();");
   //https://github.com/atom/electron/blob/master/docs/api/ipc-main.md
   mainWindow0.on('closed', function() {
@@ -173,6 +180,61 @@ const template = [
     ]
   },
   {
+    label: 'Audio/Video',
+    submenu: [
+      {
+        label: 'open',
+        accelerator:'ctrl+o',
+        click:function(){
+          prompt({
+            title: 'Input audio/vedio stream url',
+            label: 'URL:',
+            value: 'https://www.youtube.com/watch?v=MpsVE60iRLM',
+            inputAttrs: {
+                type: 'url'
+            },
+            type: 'input'
+          })
+          .then((r) => {
+              if(r === null) {
+                  console.log('user cancelled');
+              } else {
+                  console.log('result=', r);
+              }
+              mpv.load(r);
+          })
+          .catch(console.error);
+          // console.log('copy current PDF view as bookmark:'+thefile);
+          // Object.keys(webContents).map(function(v) { 
+          //   console.log("copyBookmark: v="+v+', thefile: '+thefile); 
+          //   webContents[v].send("copyBookmark",v,'nullhash');
+          //   });
+        }
+      }
+    ]
+  },
+  {
+    label: 'MindMap',
+    submenu: [
+      {
+        label: 'New map',
+        // accelerator:'ctrl+F9',
+        click:function(){
+          var mainWindow = new BrowserWindow({
+            width: 1400,
+            height: 2200,
+            webPreferences: {
+              nodeIntegration: false,
+              webSecurity: true,
+              preload: fspath.join(__dirname, 'preload.js')
+            },
+          });
+          mainWindow.loadURL(decodeURI(host+viewerurl1));
+        }
+      }
+    ]
+  },
+  {
     role: 'help',
     submenu: [
       {
@@ -216,6 +278,30 @@ function copybmks(res,ourl,req) {
   res.end("This is copybmks page.");
 }
  
+function drawmap(res,ourl,req, body) {
+  var mainWindow = new BrowserWindow({
+    width: 1400,
+    height: 2200,
+    webPreferences: {
+      nodeIntegration: false,
+      webSecurity: false, //true,
+      preload: fspath.join(__dirname, 'preload.js')
+    },
+  });
+  mainWindow.loadURL(decodeURI(host+viewerurl1));
+  mainWindow.on('closed', function() {
+      delete mainWindow.webContents;
+      // delete mainWindow;
+  });
+  mainWindow.webContents.on('did-finish-load', function() {
+    mainWindow.webContents.send("drawmap",body);
+  });//.finally(function() {webContents[thefile].send("incoming2",'page='+ourl.query['page']+'&zoom='+ourl.query['zoom']);});
+
+  // res.writeHead(200, {"Content-Type": "text/plain","Access-Control-Allow-Origin": req.headers.origin});
+  res.writeHead(200, {"Content-Type": "text/plain"});
+  res.end("This is drawmap page.");
+}
+ 
 function gotobmk(res,ourl,req) {
   // console.log("This is the gotobmk page.");
   var thefile=ourl.query['file'];
@@ -225,9 +311,10 @@ function gotobmk(res,ourl,req) {
         width: 1400,
         height: 2200,
         webPreferences: {
+          contextIsolation: false,
           nodeIntegration: false,
           webSecurity: true,
-          preload: path.join(__dirname, 'preload.js')
+          preload: fspath.join(__dirname, 'preload.js')
         },
     });
     mainWindow['thefile']=thefile;
@@ -270,11 +357,42 @@ function gotobmk(res,ourl,req) {
   res.end("This is gotobmk page.");
 }
 
+function gotompv(res,ourl,req) {
+  var thefile=ourl.query['file'];
+  var thestart=ourl.query['start'];
+  console.log('thefile: '+thefile);
+  console.log('thestart: '+thestart);
+  console.log('isRunning : '+mpv.isRunning());
+    // await mpv.start();
+    // await mpv.load('ytdl://www.youtube.com/watch?v=MpsVE60iRLM');
+  if(mpv.isRunning()){
+    mpv.getProperty('filename')
+    .then((property) => {
+        console.log('filename ' + property);
+    }).catch((error)=>{
+      console.log(error);
+      console.log("Maybe the mpv player could not be started; Maybe the video file does not exist or couldn't be loaded");
+      mpv.load('https://www.youtube.com/watch?v='+thefile);
+    })
+  }else{
+    mpv = new mpvAPI();
+    mpv.start(['--script=~/Dropbox/electron-pdfjs3/copyTime.js'])
+    mpv.load('https://www.youtube.com/watch?v='+thefile);
+  }
+  mpv.goToPosition(parseFloat(thestart));
+  res.writeHead(200, {"Content-Type": "text/plain"});
+  res.end("This is gotompv page.");
+}
+
 function route(pathname, res, ourl, req) {
   var handle = {};
+  //copyXXX 的動作理論上由 ui 直接操作比較直觀，未來應該不會在此實作
   handle["/copybmk"] = copybmk;
   handle["/copybmks"] = copybmks;
+  // gotoXXX 的動作在此實作相當合理，未來會支援更多種類
   handle["/gotobmk"] = gotobmk;
+  handle["/gotompv"] = gotompv;
+
   if (typeof handle[pathname] === 'function') {
     return handle[pathname](res,ourl, req);
   } else {
@@ -284,15 +402,80 @@ function route(pathname, res, ourl, req) {
   }
 }
 
-http.createServer(function (req, res) {
-    var ourl = url.parse(req.url,true);
-    route(ourl.pathname,res,ourl,req);
+function route2(pathname, res, ourl, req, body) {
+  var handle = {};
+  handle["/drawmap"] = drawmap;
+  if (typeof handle[pathname] === 'function') {
+    return handle[pathname](res,ourl, req, body);
+  } else {
+    // console.log("404 Not Found " + pathname);
+    res.writeHead(200, {"Content-Type": "text/plain"});
+    res.end("404 Not Found " + pathname);
+  }
+}
+
+http.createServer(function (request, response) {
+  if (request.method == 'POST') { //https://stackoverflow.com/questions/12006417/node-js-server-that-accepts-post-requests
+    var body = ''
+    request.on('data', function(data) {
+      body += data
+      // console.log('Partial body: ' + body)
+    })
+    request.on('end', function() {
+      console.log('Body: ' + JSON.stringify(JSON.parse(body)))
+      var ourl = url.parse(request.url,true);
+      route2(ourl.pathname,response,ourl,request,body)
+      // response.writeHead(200, {'Content-Type': 'text/html'}) //, "Access-Control-Allow-Origin": request.headers.origin})
+      // response.end('post received')
+    })
+  } else {
+    console.log('request.url: ' + request.url);
+    
+    var ourl = url.parse(request.url,true);
+    route(ourl.pathname,response,ourl,request);
+  }
 }).listen(6968, '127.0.0.1');
 // console.log();
 // console.log("### Starting local server");
 
 var WebServer = require("../jawatech/pdfjs2021/test/webserver.js").WebServer;
 var server = new WebServer();
-server.port = 8889;
-server.root = "../../../..";
+server.port = 8880;
+server.root = "../..";
+//server.root = "../../../..";
 server.start();
+mpv.start(['--script=~/Dropbox/electron-pdfjs3/copyTime.js'])
+// .then(() => {
+//     return mpv.load('https://www.youtube.com/watch?v=MpsVE60iRLM');
+// })
+// .then(() => {
+//     return mpv.getDuration();
+// })
+// .then((duration) => {
+//     console.log(duration);
+//     // return mpv.getProperty('someProperty');
+// })
+// // .then((property) => {
+// //     console.log(property);
+// // })
+// // catches all possible errors from above
+.catch((error) => {
+    // Maybe the mpv player could not be started
+    // Maybe the video file does not exist or couldn't be loaded
+    // Maybe someProperty is not a valid property
+    console.log(error);
+})
+// var someAsyncFunction = asnyc () => {
+//   try{
+//     await mpv.start();
+//     await mpv.load('ytdl://www.youtube.com/watch?v=MpsVE60iRLM');
+//     console.log(await mpv.getDuration());
+//     console.log(await mpv.getProperty('someProperty'));
+//   }
+//   catch (error) {
+//     // Maybe the mpv player could not be started
+//     // Maybe the video file does not exist or couldn't be loaded
+//     // Maybe someProperty is not a valid property
+//     console.log(error);
+//   }
+// }
