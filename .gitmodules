@@ -1,0 +1,3 @@
+[submodule "my-mind"]
+	path = my-mind
+	url = https://github.com/jawatech/my-mind.git
