@@ -1,3 +1,9 @@
 [submodule "my-mind"]
 	path = my-mind
 	url = https://github.com/jawatech/my-mind.git
+[submodule "pdf.js"]
+	path = pdf.js
+	url = https://github.com/mozilla/pdf.js.git
+[submodule "epubjs-reader"]
+	path = epubjs-reader
+	url = https://github.com/futurepress/epubjs-reader.git

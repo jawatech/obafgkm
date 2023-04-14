@@ -6,7 +6,6 @@ var ipc = require("electron").ipcRenderer;
 //var PDFViewerApplication = require('pdf.js');
 //
 
-//var pdfjsLib = require('../jawatech/pdfjs2021/build/generic/build/pdf.js');
 //https://discuss.atom.io/t/ipc-send-dom-object/26554
 function setData(thefile, thehash){
   function wait(condition, callback) { //https://stackoverflow.com/questions/41328534/waiting-until-a-variable-exists-with-typeof-causes-an-infinite-loop
@@ -26,6 +25,7 @@ function setData(thefile, thehash){
         getPdfva().initialBookmark = thehash;
         })}, 1000);
 }
+
 function copyToClipboard(text) {//https://komsciguy.com/js/a-better-way-to-copy-text-to-clipboard-in-javascript/
   const listener = function(ev) {
     ev.preventDefault();
@@ -35,13 +35,19 @@ function copyToClipboard(text) {//https://komsciguy.com/js/a-better-way-to-copy-
   document.execCommand('copy');
   document.removeEventListener('copy', listener);
 }
+
 function copyBookmark() {
   if(getWindow().getSelection().text=='')
-    result='[[pdfbmk:'+encodeURI(getPdfva().pdfDocumentProperties.url)+'&'+encodeURI(getPdfva().pdfViewer._location.pdfOpenParams.slice(1))+']]';
+    result='[[pdfbmk:'+encodeURI(getPdfva().url)+'&'+encodeURI(getPdfva().pdfViewer._location.pdfOpenParams.slice(1))+']]';
   else
-    result='[[pdfbmk:'+encodeURI(getPdfva().pdfDocumentProperties.url)+'&'+encodeURI(getPdfva().pdfViewer._location.pdfOpenParams.slice(1))+']['+getWindow().getSelection()+']]';
+    result='[[pdfbmk:'+encodeURI(getPdfva().url)+'&'+encodeURI(getPdfva().pdfViewer._location.pdfOpenParams.slice(1))+']['+getWindow().getSelection()+']]';
   // console.log(result);
   copyToClipboard(result);
+}
+
+function copyBookmark2() {
+  console.log('not implemented yet!!!');
+  copyToClipboard('not implemented yet!!!');
 }
 
 function setHash(thehash){
@@ -93,6 +99,11 @@ ipc.on("copyBookmark", function(event, thefile, thehash){
   copyBookmark();
 });
 
+ipc.on("copyBookmark2", function(event, thefile, thehash){
+  // console.log("copyBookmark2 ");
+  copyBookmark2();
+});
+
 function getPdfOutlines(pdfva){
     var result="* outline\n";
      /**
@@ -122,9 +133,7 @@ function getPdfOutlines(pdfva){
     var OutlinesText=result;
     return OutlinesText;
 }
-function testpreload(){
-    alert('testpreload')
-}
+
 function getPdfva(){
   var pdfva=null;
   if(typeof PDFViewerApplication== "undefined"){
@@ -147,14 +156,15 @@ function getPdfva(){
   else{pdfva=PDFViewerApplication;}
   return pdfva;
 }
+
 function getWindow(){
   if(typeof frames[0]== "undefined"){
     return frames;
   }
   else return frames[0].window;
 }
+
 ipc.on("copybmks", function(event, thefile, thehash){
-//  const { PDFViewerApplication, PDFViewer } = require('../jawatech/pdfjs2021/build/generic/web/viewer.js')
   var pdfva=getPdfva();
   // console.log("copybmks called on: "+thefile+", hash: "+thehash+', PDFViewerApplication: '+((typeof PDFViewerApplication== "undefined")?'undefined':'defined'));
   // console.log('PDFViewerApplication: '+getPdfOutlines(pdfva));

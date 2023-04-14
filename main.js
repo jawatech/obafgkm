@@ -1,65 +1,74 @@
 'use strict';
-const electron = require('electron');
+const {
+  app,
+  BrowserWindow,
+  Menu,
+  ipcMain,
+  dialog,
+  powerSaveBlocker,
+  nativeTheme,
+} = require("electron");
 const qs = require ("querystring");
-const fspath = require('path');
-//console.log(fspath.resolve(require('electron')));
-// console.log(require.resolve('electron'));
+const path = require('path');
 const fs = require('fs');
+const { once } = require('events');
+
 const prompt = require('electron-prompt');//https://www.npmjs.com/package/electron-prompt
 // where you import your packages
 const mpvAPI = require('node-mpv');
 // where you want to initialise the API
 var mpv = new mpvAPI();
 //const app = electron.app;
-const BrowserWindow = electron.BrowserWindow;
-//const pdfURLHOME = "http://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
-//const pdfURLHOME = "file://C:/Users/sig/github/pdf.js/web/compressed.tracemonkey-pldi-09.pdf";
-const pdfURLHOME = "Dropbox/org/gtd/mygtd.pdf";//\Dropbox\misc\Harrison’s Principles of Internal Medicine, 20th Edition.pdf
-//const pdfURLHOME = "Dropbox/misc/Harrison’s Principles of Internal Medicine, 20th Edition.pdf";//\Dropbox\misc\Harrison’s Principles of Internal Medicine, 20th Edition.pdf
-const host='http://127.0.0.1:8880/Dropbox/';
-// const host2='http://127.0.0.1:6968/';
-//const viewerurl='pdf.js/build/generic/web/viewer.html';
-const viewerurl='jawatech/pdfjs2021/build/generic/web/viewer.html';
-const viewerurl1='electron-pdfjs3/my-mind/index.html';
-var webContents = {};
-var browserWindows = {};
-var mainWindow0 = null;
-const ipcMain = require('electron').ipcMain;
-const { app, Menu } = require('electron')
+var toml = require('toml');
+var parsed=null;
+var host=null;
+var viewerurl=null;
+var viewerurl1=null;
+var viewerurl2=null;
+var mpvstart=null;
+var emacsServerPort=null;
+var serverroot=null;
+parsed = toml.parse(fs.readFileSync('config.toml','utf8')); //https://www.tabnine.com/code/javascript/functions/toml/parse
+host=parsed.host;
+viewerurl=parsed.viewerurl ;
+viewerurl1=parsed.viewerurl1;
+viewerurl2=parsed.viewerurl2;
+mpvstart=parsed.mpvstart;
+emacsServerPort=parsed.emacsServerPort;
+serverroot=parsed.serverroot;
+let webContents = {};
+let browserWindows = {};
+let mainWindow0 = null;
+let options = {
+  width: 1050,
+  height: 660,
+  webPreferences: {
+    webSecurity: false, //webSecurity: true,
+    nodeIntegration: true, //nodeIntegration: false,
+    contextIsolation: false,
+    nativeWindowOpen: true, //not used?
+    nodeIntegrationInSubFrames: true, //not used?
+    allowRunningInsecureContent: true, //not used?
+    enableRemoteModule: true, //not used?
+  	// Load `electron-notification-shim` in rendering view, by requiring it in your preloaded script. 
+    //the path of preload script has to be "absolute path".
+    //https://github.com/atom/electron/blob/v0.34.3/docs/api/browser-window.md#new-browserwindowoptions
+    preload: path.join(__dirname, 'preload.js')
+  },
+};
+
 const isMac = process.platform === 'darwin'
-//require('./menu');
+
 app.on('ready', function() {
-  mainWindow0 = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: {
-      contextIsolation: false,
-      nodeIntegration: false,
-      webSecurity: true,
-	// Load `electron-notification-shim` in rendering view, by requiring it in your preloaded script. 
-      //the path of preload script has to be "absolute path".
-      //https://github.com/atom/electron/blob/v0.34.3/docs/api/browser-window.md#new-browserwindowoptions
-      preload: fspath.join(__dirname, 'preload.js')
-    },
-  });
+  mainWindow0 = new BrowserWindow(options);
   
-  const param = qs.stringify({file: pdfURLHOME});
-  //console.log(host+'jawatech/pdfjs2021/build/generic/web/viewer.html?' + param);
-  //mainWindow.loadURL('file://' + __dirname + '/../pdf.js/web/viewer.html?' + param);
-  //file://C:\Users\sig\github\electron-pdfjs/../pdf.js/web/viewer.html
-  //mainWindow.loadURL(host+'jawatech/pdfjs2021/build/generic/web/viewer.html?' + param);
   mainWindow0.loadURL(host+'?frame');
-  //console.log(host+'jawatech/pdfjs2021/build/generic/web/viewer.html?' + param);
   //mainWindow.webContents.openDevTools();
-  webContents[pdfURLHOME]=mainWindow0.webContents;
-  mainWindow0['thefile']=pdfURLHOME;
 //  browserWindows[pdfURLHOME]=mainWindow;  //don't hide the main window
   //https://github.com/atom/electron/blob/v0.34.3/docs/api/ipc-main-process.md#sending-messages
   //https://github.com/atom/electron/issues/3440
   //http://qiita.com/indometacin/items/018f78757c54a4c2eb5b
   ipcMain.on('retrieve', function(event, arg) {
-          // console.log();  // prints "ping"
-          // console.log(fspath.join(__dirname, 'preload.js'));
           event.sender.send('asynchronous-reply', 'pong');
         });
   ipcMain.on('retrieve2', function(event, arg) {
@@ -74,7 +83,7 @@ app.on('ready', function() {
         browserWindows[mthefile].close();
         delete browserWindows[mthefile];
     };
-    delete webContents[pdfURLHOME];
+    // delete webContents[pdfURLHOME];
     mainWindow0 = null;
   });
 });
@@ -139,8 +148,8 @@ const template = [
       { role: 'toggleDevTools' },
       { type: 'separator' },
       { role: 'resetZoom' },
-      { role: 'zoomIn' },
-      { role: 'zoomOut' },
+      { role: 'zoomIn', accelerator: 'CommandOrControl+=' }, //https://github.com/electron/electron/issues/15496
+      { role: 'zoomOut', accelerator: 'CommandOrControl-_' },
       { type: 'separator' },
       { role: 'togglefullscreen' }
     ]
@@ -180,6 +189,24 @@ const template = [
     ]
   },
   {
+    label: 'ePub',
+    submenu: [
+      {
+        label: 'Copy link',
+        accelerator:'ctrl+shift+F9',
+        click:function(){
+          var thefile=BrowserWindow.getFocusedWindow()['thefile'];
+          console.log('copy current ePub view as bookmark:'+thefile);
+          BrowserWindow.getFocusedWindow().send("copyBookmark2",thefile,'nullhash');
+          // Object.keys(webContents).map(function(v) { 
+          //   console.log("copyBookmark: v="+v+', thefile: '+thefile); 
+          //   webContents[v].send("copyBookmark",v,'nullhash');
+          //   });
+        }
+      }
+    ]
+  },
+  {
     label: 'Audio/Video',
     submenu: [
       {
@@ -195,13 +222,14 @@ const template = [
             },
             type: 'input'
           })
-          .then((r) => {
+          .then(async (r) => {
               if(r === null) {
                   console.log('user cancelled');
               } else {
                   console.log('result=', r);
               }
-              mpv.load(r);
+              // await mpv.start();
+              await mpv.load(r);
           })
           .catch(console.error);
           // console.log('copy current PDF view as bookmark:'+thefile);
@@ -226,7 +254,7 @@ const template = [
             webPreferences: {
               nodeIntegration: false,
               webSecurity: true,
-              preload: fspath.join(__dirname, 'preload.js')
+              preload: path.join(__dirname, 'preload.js')
             },
           });
           mainWindow.loadURL(decodeURI(host+viewerurl1));
@@ -285,10 +313,11 @@ function drawmap(res,ourl,req, body) {
     webPreferences: {
       nodeIntegration: false,
       webSecurity: false, //true,
-      preload: fspath.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js')
     },
   });
   mainWindow.loadURL(decodeURI(host+viewerurl1));
+  mainWindow.maximize();
   mainWindow.on('closed', function() {
       delete mainWindow.webContents;
       // delete mainWindow;
@@ -314,12 +343,14 @@ function gotobmk(res,ourl,req) {
           contextIsolation: false,
           nodeIntegration: false,
           webSecurity: true,
-          preload: fspath.join(__dirname, 'preload.js')
+          preload: path.join(__dirname, 'preload.js')
         },
     });
     mainWindow['thefile']=thefile;
-    // console.log(host+viewerurl+'=='+ourl.search+'=='+ourl.hash);//?' + param);
-    if(ourl.search.startsWith('?file=/'))
+    console.log(host+viewerurl+'=='+ourl.search+'=='+ourl.hash);//?' + param);
+    if(ourl.search.startsWith('?bookPath=/'))
+        mainWindow.loadURL(decodeURI(host+viewerurl2+ourl.search));
+    else if(ourl.search.startsWith('?file=/'))
         mainWindow.loadURL(decodeURI(host+viewerurl+ourl.search));
     else        
         mainWindow.loadURL(decodeURI(host+viewerurl+'?file=/'+ourl.search.substring(6)));
@@ -376,7 +407,7 @@ function gotompv(res,ourl,req) {
     })
   }else{
     mpv = new mpvAPI();
-    mpv.start(['--script=~/Dropbox/electron-pdfjs3/copyTime.js'])
+    mpv.start([mpvstart])
     mpv.load('https://www.youtube.com/watch?v='+thefile);
   }
   mpv.goToPosition(parseFloat(thestart));
@@ -391,6 +422,7 @@ function route(pathname, res, ourl, req) {
   handle["/copybmks"] = copybmks;
   // gotoXXX 的動作在此實作相當合理，未來會支援更多種類
   handle["/gotobmk"] = gotobmk;
+  handle["/gotobmk2"] = gotobmk2;
   handle["/gotompv"] = gotompv;
 
   if (typeof handle[pathname] === 'function') {
@@ -434,17 +466,17 @@ http.createServer(function (request, response) {
     var ourl = url.parse(request.url,true);
     route(ourl.pathname,response,ourl,request);
   }
-}).listen(6968, '127.0.0.1');
-// console.log();
+}).listen(emacsServerPort, '127.0.0.1');
 // console.log("### Starting local server");
 
-var WebServer = require("../jawatech/pdfjs2021/test/webserver.js").WebServer;
+var WebServer = require("./webserver.js").WebServer;
 var server = new WebServer();
 server.port = 8880;
-server.root = "../..";
-//server.root = "../../../..";
+server.root = serverroot;
+server.viewerurl=host+viewerurl;
+server.viewerurl2=host+viewerurl2;
 server.start();
-mpv.start(['--script=~/Dropbox/electron-pdfjs3/copyTime.js'])
+mpv.start([mpvstart])
 // .then(() => {
 //     return mpv.load('https://www.youtube.com/watch?v=MpsVE60iRLM');
 // })

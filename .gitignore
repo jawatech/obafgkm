@@ -8,6 +8,7 @@ logs
 *.bak
 npm-debug.log*
 log.txt
+config.toml
 # Runtime data
 pids
 *.pid
@@ -34,6 +35,9 @@ build/Release
 # Dependency directory
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
 node_modules
+epubjs-reader
+my-mind
+pdf.js
 _pdfjs
 pdfjs/*
 generic
