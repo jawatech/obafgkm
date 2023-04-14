@@ -46,7 +46,7 @@ function copyBookmark() {
 }
 
 function copyBookmark2() {
-  console.log('not implemented yet!!!');
+  console.log('not implemented yet!!!'+getWindow().document.location.search);
   copyToClipboard('not implemented yet!!!');
 }
 
@@ -99,7 +99,7 @@ ipc.on("copyBookmark", function(event, thefile, thehash){
   copyBookmark();
 });
 
-ipc.on("copyBookmark2", function(event, thefile, thehash){
+ipc.on("copyBookmark2", function(event){
   // console.log("copyBookmark2 ");
   copyBookmark2();
 });

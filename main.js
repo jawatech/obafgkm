@@ -44,7 +44,7 @@ let options = {
   height: 660,
   webPreferences: {
     webSecurity: false, //webSecurity: true,
-    nodeIntegration: true, //nodeIntegration: false,
+    nodeIntegration: false,
     contextIsolation: false,
     nativeWindowOpen: true, //not used?
     nodeIntegrationInSubFrames: true, //not used?
@@ -195,9 +195,8 @@ const template = [
         label: 'Copy link',
         accelerator:'ctrl+shift+F9',
         click:function(){
-          var thefile=BrowserWindow.getFocusedWindow()['thefile'];
-          console.log('copy current ePub view as bookmark:'+thefile);
-          BrowserWindow.getFocusedWindow().send("copyBookmark2",thefile,'nullhash');
+          console.log('copy current ePub view as bookmark:');
+          BrowserWindow.getFocusedWindow().send("copyBookmark2");
           // Object.keys(webContents).map(function(v) { 
           //   console.log("copyBookmark: v="+v+', thefile: '+thefile); 
           //   webContents[v].send("copyBookmark",v,'nullhash');
@@ -364,7 +363,8 @@ function gotobmk(res,ourl,req) {
         if(typeof ourl.query['page'] !== 'undefined'){
             // console.log("typeof ourl.query['page'] !== 'undefined'");
             mainWindow.webContents.send("incoming",thefile,'page='+ourl.query['page']+'&zoom='+ourl.query['zoom']);//
-        }else if(ourl.query['nameddest']!=''){
+        }else if(ourl.query['bookPath']!== 'undefined'){
+        }else if(ourl.query['nameddest']!== 'undefined'){
             // console.log("ourl.query['nameddest'] : "+ourl.query['nameddest']);
             mainWindow.webContents.send("incoming",thefile,ourl.query['nameddest']);//            
         }
@@ -375,9 +375,10 @@ function gotobmk(res,ourl,req) {
         if(typeof ourl.query['page'] !== 'undefined'){
             // console.log("typeof ourl.query['page'] !== 'undefined'");
             webContents[thefile].send("incoming2",'page='+ourl.query['page']+'&zoom='+ourl.query['zoom']);
-        }else if(ourl.query['explicitDest']　!== 'undefined'){
+        }else if(ourl.query['explicitDest']!== 'undefined'){
             webContents[thefile].send("incoming2",ourl.query['explicitDest']);
-        }else if(ourl.query['nameddest']　!== 'undefined'){
+        }else if(ourl.query['bookPath']!== 'undefined'){
+        }else if(ourl.query['nameddest']!== 'undefined'){
             webContents[thefile].send("incoming2",ourl.query['nameddest']);
         }
   }
