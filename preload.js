@@ -46,8 +46,13 @@ function copyBookmark() {
 }
 
 function copyBookmark2() {
-  console.log('not implemented yet!!!'+getWindow().document.location.search);
-  copyToClipboard('not implemented yet!!!');
+  var seltext=getFrame0().window.getSelection().toString();
+  if(seltext=='')
+    result='[[epubbmk:'+(getWindow().document.location.search.substring(10))+(getWindow().document.location.hash)+']]';
+  else
+    result='[[epubbmk:'+(getWindow().document.location.search.substring(10))+(getWindow().document.location.hash)+']['+seltext+']]';
+  // console.log(result);
+  copyToClipboard(result);
 }
 
 function setHash(thehash){
@@ -162,6 +167,17 @@ function getWindow(){
     return frames;
   }
   else return frames[0].window;
+  //frames[0].reader.book
+  //
+}
+
+function getFrame0(){
+  if( frames[0].name== "pdf"){
+    return frames[0].frames[0];
+  }
+  else return frames[0];
+  //frames[0].reader.book
+  //
 }
 
 ipc.on("copybmks", function(event, thefile, thehash){

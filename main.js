@@ -195,7 +195,7 @@ const template = [
         label: 'Copy link',
         accelerator:'ctrl+shift+F9',
         click:function(){
-          console.log('copy current ePub view as bookmark:');
+          console.log('copy current ePub view as bookmark:'); //+app.window.getSelection());
           BrowserWindow.getFocusedWindow().send("copyBookmark2");
           // Object.keys(webContents).map(function(v) { 
           //   console.log("copyBookmark: v="+v+', thefile: '+thefile); 
