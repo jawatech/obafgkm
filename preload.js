@@ -48,9 +48,9 @@ function copyBookmark() {
 function copyBookmark2() {
   var seltext=getFrame0().window.getSelection().toString();
   if(seltext=='')
-    result='[[epubbmk:'+(getWindow().document.location.search.substring(10))+(getWindow().document.location.hash)+']]';
+    result='[[epubbmk:'+(getWindow().document.location.search.substring(10))+encodeURI(getWindow().document.location.hash)+']]';
   else
-    result='[[epubbmk:'+(getWindow().document.location.search.substring(10))+(getWindow().document.location.hash)+']['+seltext+']]';
+    result='[[epubbmk:'+(getWindow().document.location.search.substring(10))+encodeURI(getWindow().document.location.hash)+']['+seltext+']]';
   // console.log(result);
   copyToClipboard(result);
 }
@@ -58,6 +58,13 @@ function copyBookmark2() {
 function setHash(thehash){
   // console.log("thehash "+thehash);
   PDFViewerApplication.pdfLinkService.setHash(thehash);
+//  console.log("PDFViewerApplication.pdfViewer._location.pdfOpenParams: "+PDFViewerApplication.pdfViewer._location.pdfOpenParams);
+//  ipc.send("retrieve2", PDFViewerApplication);//document);
+}
+
+function setHashEpub(thehash){
+  // console.log("thehash "+thehash);
+  getWindow().reader.book.rendition.display(thehash);
 //  console.log("PDFViewerApplication.pdfViewer._location.pdfOpenParams: "+PDFViewerApplication.pdfViewer._location.pdfOpenParams);
 //  ipc.send("retrieve2", PDFViewerApplication);//document);
 }
@@ -88,6 +95,11 @@ function drawmap(body){
 ipc.on("incoming2", function(event,thehash){
   // console.log("incoming2: "+thehash);
   setHash(thehash);
+});
+
+ipc.on("incoming3", function(event,thehash){
+  // console.log("incoming2: "+thehash);
+  setHashEpub(thehash);
 });
 
 ipc.on("drawmap", function(event,body){
@@ -163,8 +175,9 @@ function getPdfva(){
 }
 
 function getWindow(){
-  if(typeof frames[0]== "undefined"){
-    return frames;
+  console.log('typeof frames[0]: '+typeof frames[0])
+  if(typeof frames[0].frames[0]== "undefined"){
+    return window;
   }
   else return frames[0].window;
   //frames[0].reader.book
@@ -172,7 +185,7 @@ function getWindow(){
 }
 
 function getFrame0(){
-  if( frames[0].name== "pdf"){
+  if(frames[0].name== "pdf"){
     return frames[0].frames[0];
   }
   else return frames[0];

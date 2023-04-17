@@ -330,6 +330,43 @@ function drawmap(res,ourl,req, body) {
   res.end("This is drawmap page.");
 }
  
+function gotobmk2(res,ourl,req) {
+  console.log("This is the gotobmk2 page."+req.url);
+  var thefile=ourl.query['bookPath'];
+  console.log('thefile: '+thefile);
+  console.log('ourl.query: '+ JSON.stringify(ourl.query));
+  var mainWindow=null;
+  if(!(thefile in webContents)){
+    mainWindow = new BrowserWindow({
+        width: 1400,
+        height: 2200,
+        webPreferences: {
+          contextIsolation: false,
+          nodeIntegration: false,
+          webSecurity: true,
+          preload: path.join(__dirname, 'preload.js')
+        },
+    });
+    mainWindow['thefile']=thefile;
+    console.log(host+viewerurl2+'=='+ourl.search.replace('&hash=','#'));//?' + param);
+    if(ourl.search.startsWith('?bookPath=/'))
+        mainWindow.loadURL(decodeURI(host+viewerurl2+ourl.search.replace('&hash=','#')));
+    webContents[thefile]=mainWindow.webContents;
+    browserWindows[thefile]=mainWindow;
+    mainWindow.on('closed', function() {
+        delete webContents[thefile];
+        delete browserWindows[thefile];
+    });
+    mainWindow.webContents.on('did-finish-load', function() {
+      mainWindow.webContents.send("incoming3",thefile,'page='+ourl.query['page']+'&zoom='+ourl.query['zoom']);//
+    });
+  }
+  else
+    webContents[thefile].send("incoming3",ourl.query['hash']);
+  res.writeHead(200, {"Content-Type": "text/plain"});
+  res.end("This is gotobmk page.");
+}
+
 function gotobmk(res,ourl,req) {
   // console.log("This is the gotobmk page.");
   var thefile=ourl.query['file'];
@@ -363,7 +400,6 @@ function gotobmk(res,ourl,req) {
         if(typeof ourl.query['page'] !== 'undefined'){
             // console.log("typeof ourl.query['page'] !== 'undefined'");
             mainWindow.webContents.send("incoming",thefile,'page='+ourl.query['page']+'&zoom='+ourl.query['zoom']);//
-        }else if(ourl.query['bookPath']!== 'undefined'){
         }else if(ourl.query['nameddest']!== 'undefined'){
             // console.log("ourl.query['nameddest'] : "+ourl.query['nameddest']);
             mainWindow.webContents.send("incoming",thefile,ourl.query['nameddest']);//            
