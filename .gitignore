@@ -1,6 +1,8 @@
 
 # Created by https://www.gitignore.io/api/node
 tcpserver.pl
+webcontents.md
+menu.js
 ### Node ###
 # Logs
 logs
@@ -8,6 +10,7 @@ logs
 *.bak
 npm-debug.log*
 log.txt
+log.txt.bak
 config.toml
 # Runtime data
 pids
