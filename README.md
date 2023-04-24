@@ -6,6 +6,18 @@
 * Using http server to receive commands issued from emacs that controls pdf.js
 * Adapted from https://github.com/seanchas116/electron-pdfjs
 ## Installation
+### config.toml (substitue with appropriate value)
+host = 'http://127.0.0.1:8880/parentDir/'
+mpvstart = '--script=~/parentDir/obafgkm/copyTime.js'
+mpvimgsavepath = '~/parentDir//img/'
+viewerPort = 6968
+explorerPort = 8880
+serverroot = '../..'
+viewerurl = 'obafgkm/pdf.js/build/generic/web/viewer.html'
+viewerurl1 = 'obafgkm/my-mind/index.html'
+viewerurl2 = 'obafgkm/epubjs-reader/reader/index.html'
+
+
 ### emacs shortcuts
      (org-add-link-type "pdfbmk" 'org-pdf-jump2 'org-pdf-export)
      (org-add-link-type "epubbmk" 'org-epub-jump2 nil)
