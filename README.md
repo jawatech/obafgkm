@@ -10,7 +10,8 @@
      (org-add-link-type "pdfbmk" 'org-pdf-jump2 'org-pdf-export)
      (org-add-link-type "epubbmk" 'org-epub-jump2 nil)
      (org-add-link-type "mpv" 'org-mpv-jump2 nil)
-
+     (setq adobe-prog2 "C:\\Progra~1\\Adobe\\Acroba~1\\Acrobat\\Acrobat.exe")
+     
 	(defun org-pdf-jump2 (bmk2)
 	  (let* ((bmk (org-link-decode bmk2))(p1 (string-match (regexp-quote "=") bmk))
 		(query (split-string bmk "&")) )
