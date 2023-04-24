@@ -37,10 +37,10 @@ function copyToClipboard(text) {//https://komsciguy.com/js/a-better-way-to-copy-
 }
 
 function copyBookmark() {
-  if(getWindow().getSelection().text=='')
+  if(window.getSelection().toString()=='')
     result='[[pdfbmk:'+encodeURI(getPdfva().url)+'&'+encodeURI(getPdfva().pdfViewer._location.pdfOpenParams.slice(1))+']]';
   else
-    result='[[pdfbmk:'+encodeURI(getPdfva().url)+'&'+encodeURI(getPdfva().pdfViewer._location.pdfOpenParams.slice(1))+']['+getWindow().getSelection()+']]';
+    result='[[pdfbmk:'+encodeURI(getPdfva().url)+'&'+encodeURI(getPdfva().pdfViewer._location.pdfOpenParams.slice(1))+']['+window.getSelection().toString()+']]';
   // console.log(result);
   copyToClipboard(result);
 }
