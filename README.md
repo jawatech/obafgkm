@@ -7,11 +7,13 @@
 * Adapted from https://github.com/seanchas116/electron-pdfjs
 * http functions referenced from http://openlab.ring.gr.jp/skk/skk/main/experimental/skk-search-web.el
 ## Installation
+### Pull git submodules after cloning project from GitHub
+git submodule update --init
 ### config.toml (substitue with appropriate value)
 
 	host = 'http://127.0.0.1:8880/parentDir/'
 	mpvstart = '--script=~/parentDir/obafgkm/copyTime.js'
-	mpvimgsavepath = '~/parentDir//img/'
+	mpvimgsavepath = '~/parentDir/img/'
 	viewerPort = 6968
 	explorerPort = 8880
 	serverroot = '../..'
