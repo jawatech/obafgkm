@@ -129,6 +129,7 @@ WebServer.prototype = {
     var cacheExpirationTime = this.cacheExpirationTime;
     var viewerurl = this.viewerurl;
     var viewerurl2 = this.viewerurl2;
+    var viewerport  =this.viewerport;
     var filePath;
     fs.realpath(path.join(this.root, pathPart), checkFile);
 
@@ -232,29 +233,11 @@ WebServer.prototype = {
         res.write(
           '<html><head><meta charset="utf-8"></head><body id="myUL">' +
           `<script>
-function copyToClipboard(text) {//https://komsciguy.com/js/a-better-way-to-copy-text-to-clipboard-in-javascript/
-  const listener = function(ev) {
-    ev.preventDefault();
-    ev.clipboardData.setData('text/plain', text);
-  };
-  document.addEventListener('copy', listener);
-  document.execCommand('copy');
-  document.removeEventListener('copy', listener);
-}
 function copyBookmarks() {
-  function reqListener () {
-    console.log(this.responseText);
-  }
-  
   var oReq = new XMLHttpRequest();
-  oReq.addEventListener("load", reqListener);
-  oReq.open("GET", "http://127.0.0.1:6968/copybmks");
+  oReq.addEventListener("load", null);
+  oReq.open("GET", "http://127.0.0.1:"+viewerport+"/copybmks");
   oReq.send();    
-  //    copyToClipboard('http://127.0.0.1:6968/copybmks');
-}
-function copyBookmark() {
-    result='[[pdfbmk:'+encodeURI(window.parent.frames[0].window.PDFViewerApplication.pdfDocumentProperties.url)+'&'+encodeURI(window.parent.frames[0].window.PDFViewerApplication.pdfViewer._location.pdfOpenParams.slice(1))+']]';
-    copyToClipboard(result);
 }
 function myFunction() {
   // Declare variables
@@ -278,7 +261,7 @@ function myFunction() {
 </script>`+
             "<h1>PDFs of " +
             pathPart +
-            "</h1>\n<a href='javascript:void(0)' onclick='copyBookmarks()'>Copy bookmarks</a><br><a href='javascript:void(0)' onclick='copyBookmark()'>Copy current view as bookmark</a><br>Filter <input type=\"text\" id=\"myInput\" onkeyup=\"myFunction()\" placeholder=\"Search for names..\"><input type=\"hidden\" id=\"inputhidden\"><br>"
+            "</h1>\n<a href='javascript:void(0)' onclick='copyBookmarks()'>Copy bookmarks</a><br><br>Filter <input type=\"text\" id=\"myInput\" onkeyup=\"myFunction()\" placeholder=\"Search for names..\"><input type=\"hidden\" id=\"inputhidden\"><br>"
         );//https://www.w3schools.com/howto/howto_js_filter_lists.asp
         if (pathPart !== "/") {
           res.write('<a href="..">..</a><br>\n');

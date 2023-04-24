@@ -13,7 +13,6 @@ config.toml
 pids
 *.pid
 *.seed
-mpv*.jpg
 *~
 *.mymind
 copyTime.js.js
@@ -39,9 +38,6 @@ node_modules
 epubjs-reader
 my-mind
 pdf.js
-_pdfjs
-pdfjs/*
-generic
 # Optional npm cache directory
 .npm
 

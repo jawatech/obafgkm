@@ -26,7 +26,8 @@ var viewerurl=null;
 var viewerurl1=null;
 var viewerurl2=null;
 var mpvstart=null;
-var emacsServerPort=null;
+var viewerPort=null;
+var explorerPort=null;
 var serverroot=null;
 parsed = toml.parse(fs.readFileSync('config.toml','utf8')); //https://www.tabnine.com/code/javascript/functions/toml/parse
 host=parsed.host;
@@ -34,7 +35,8 @@ viewerurl=parsed.viewerurl ;
 viewerurl1=parsed.viewerurl1;
 viewerurl2=parsed.viewerurl2;
 mpvstart=parsed.mpvstart;
-emacsServerPort=parsed.emacsServerPort;
+viewerPort=parsed.viewerPort;
+explorerPort=parsed.explorerPort;
 serverroot=parsed.serverroot;
 let webContents = {};
 let browserWindows = {};
@@ -44,7 +46,7 @@ let options = {
   height: 660,
   webPreferences: {
     webSecurity: false, //webSecurity: true,
-    nodeIntegration: false,
+    nodeIntegration: false, //https://www.debugandrelease.com/the-ultimate-electron-guide/
     contextIsolation: false,
     nativeWindowOpen: true, //not used?
     nodeIntegrationInSubFrames: true, //not used?
@@ -185,6 +187,17 @@ const template = [
           //   webContents[v].send("copyBookmark",v,'nullhash');
           //   });
         }
+      },
+      {
+        label: 'Copy TOC',
+        accelerator:'shift+F9',
+        click:function(){
+          BrowserWindow.getFocusedWindow().send("copybmks");
+          // Object.keys(webContents).map(function(v) { 
+          //   console.log("copyBookmark: v="+v+', thefile: '+thefile); 
+          //   webContents[v].send("copyBookmark",v,'nullhash');
+          //   });
+        }
       }
     ]
   },
@@ -197,6 +210,17 @@ const template = [
         click:function(){
           console.log('copy current ePub view as bookmark:'); //+app.window.getSelection());
           BrowserWindow.getFocusedWindow().send("copyBookmark2");
+          // Object.keys(webContents).map(function(v) { 
+          //   console.log("copyBookmark: v="+v+', thefile: '+thefile); 
+          //   webContents[v].send("copyBookmark",v,'nullhash');
+          //   });
+        }
+      },
+      {
+        label: 'Copy TOC',
+        accelerator:'alt+F9',
+        click:function(){
+          BrowserWindow.getFocusedWindow().send("copybmks2");
           // Object.keys(webContents).map(function(v) { 
           //   console.log("copyBookmark: v="+v+', thefile: '+thefile); 
           //   webContents[v].send("copyBookmark",v,'nullhash');
@@ -503,12 +527,13 @@ http.createServer(function (request, response) {
     var ourl = url.parse(request.url,true);
     route(ourl.pathname,response,ourl,request);
   }
-}).listen(emacsServerPort, '127.0.0.1');
+}).listen(viewerPort, '127.0.0.1');
 // console.log("### Starting local server");
 
 var WebServer = require("./webserver.js").WebServer;
 var server = new WebServer();
-server.port = 8880;
+server.port = explorerPort;
+server.viewerPort=viewerPort;
 server.root = serverroot;
 server.viewerurl=host+viewerurl;
 server.viewerurl2=host+viewerurl2;
