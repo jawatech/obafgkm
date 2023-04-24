@@ -13,7 +13,7 @@ git submodule update --init
 
 	host = 'http://127.0.0.1:8880/parentDir/'
 	mpvstart = '--script=~/parentDir/obafgkm/copyTime.js'
-	mpvimgsavepath = '~/parentDir//img/'
+	mpvimgsavepath = '~/parentDir/img/'
 	viewerPort = 6968
 	explorerPort = 8880
 	serverroot = '../..'
