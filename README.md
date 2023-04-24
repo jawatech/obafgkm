@@ -1,6 +1,6 @@
-## PDF.js viewer in Electron app, incoporating a http server that receives commands from emacs
+## PDF.js & ePub viewer in Electron app, incoporating a http server that receives commands from emacs
 
-* Open PDF.js viewer HTML in Electron
+* Open PDF.js & ePub viewer in Electron
 * Disable nodeIntegration and webSecurity
 * Using ipc to communicate within electron between main / renderer threads
 * Using http server to receive commands issued from emacs that controls pdf.js
