@@ -5,6 +5,7 @@
 * Using ipc to communicate within electron between main / renderer threads
 * Using http server to receive commands issued from emacs that controls pdf.js
 * Adapted from https://github.com/seanchas116/electron-pdfjs
+* http functions referenced from http://openlab.ring.gr.jp/skk/skk/main/experimental/skk-search-web.el
 ## Installation
 ### config.toml (substitue with appropriate value)
 
